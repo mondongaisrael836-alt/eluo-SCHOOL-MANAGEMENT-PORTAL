@@ -42,6 +42,9 @@ fun MainPortalApp(
     val teachers by viewModel.teachers.collectAsStateWithLifecycle()
     val classes by viewModel.classes.collectAsStateWithLifecycle()
     val notices by viewModel.notices.collectAsStateWithLifecycle()
+    val attendance by viewModel.attendance.collectAsStateWithLifecycle()
+    val eduShorts by viewModel.eduShorts.collectAsStateWithLifecycle()
+    val showOnboarding by viewModel.showOnboarding.collectAsStateWithLifecycle()
 
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     val payeePhone by viewModel.payeePhone.collectAsStateWithLifecycle()
@@ -115,6 +118,13 @@ fun MainPortalApp(
                     teachers = teachers,
                     classes = classes,
                     notices = notices,
+                    eduShorts = eduShorts,
+                    showOnboarding = showOnboarding,
+                    onCompleteOnboarding = { viewModel.setOnboardingCompleted() },
+                    onToggleLikeShort = { viewModel.toggleLikeShort(it) },
+                    onAddCommentToShort = { id, author, text -> viewModel.addCommentToShort(id, text, author, 0) },
+                    onUploadEduShort = { title, desc, path, tag -> viewModel.uploadEduShort(title, "Faculty Admin", tag, 0xFF3B82F6.toInt(), 0xFF8B5CF6.toInt()) },
+                    onExecuteAiQuery = { role, query, cb -> viewModel.executeAiQuery(role, query, cb) },
                     onNavigateToTab = { selectedTab = it },
                     modifier = Modifier.fillMaxSize()
                 )
@@ -131,6 +141,8 @@ fun MainPortalApp(
                     notices = notices,
                     onSaveNotice = { viewModel.saveNotice(it) },
                     onDeleteNotice = { viewModel.deleteNotice(it) },
+                    attendance = attendance,
+                    onSaveAttendance = { d, cls, p, a -> viewModel.saveAttendance(d, cls, p, a) },
                     initialTab = 0,
                     modifier = Modifier.fillMaxSize()
                 )

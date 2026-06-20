@@ -22,4 +22,8 @@ class SchoolRepository(private val schoolDao: SchoolDao) {
 
     suspend fun insertNotice(notice: Notice) = schoolDao.insertNotice(notice)
     suspend fun deleteNoticeById(id: Int) = schoolDao.deleteNoticeById(id)
+
+    val allAttendance: Flow<List<AttendanceRecord>> = schoolDao.getAllAttendance()
+    suspend fun insertAttendance(record: AttendanceRecord) = schoolDao.insertAttendance(record)
+    suspend fun deleteAttendanceByDateAndClass(date: String, className: String) = schoolDao.deleteAttendanceByDateAndClass(date, className)
 }

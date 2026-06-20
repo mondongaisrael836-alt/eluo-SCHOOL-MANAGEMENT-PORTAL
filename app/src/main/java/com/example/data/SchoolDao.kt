@@ -53,4 +53,14 @@ interface SchoolDao {
 
     @Query("DELETE FROM notices WHERE id = :id")
     suspend fun deleteNoticeById(id: Int)
+
+    // Attendance Queries
+    @Query("SELECT * FROM attendance_records ORDER BY date DESC")
+    fun getAllAttendance(): Flow<List<AttendanceRecord>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAttendance(record: AttendanceRecord)
+
+    @Query("DELETE FROM attendance_records WHERE date = :date AND className = :className")
+    suspend fun deleteAttendanceByDateAndClass(date: String, className: String)
 }

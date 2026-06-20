@@ -29,11 +29,13 @@ fun RegistryScreen(
     notices: List<Notice>,
     onSaveNotice: (Notice) -> Unit,
     onDeleteNotice: (Notice) -> Unit,
+    attendance: List<AttendanceRecord>,
+    onSaveAttendance: (String, String, List<String>, List<String>) -> Unit,
     initialTab: Int = 0,
     modifier: Modifier = Modifier
 ) {
     var selectedTopTab by remember { mutableStateOf(initialTab) }
-    val tabs = listOf("Students", "Teachers", "Sessions", "Circulars")
+    val tabs = listOf("Students", "Teachers", "Sessions", "Circulars", "Attendance")
 
     Column(
         modifier = modifier
@@ -62,7 +64,8 @@ fun RegistryScreen(
                             0 -> Icons.Default.People
                             1 -> Icons.Default.SupervisorAccount
                             2 -> Icons.Default.Class
-                            else -> Icons.Default.Campaign
+                            3 -> Icons.Default.Campaign
+                            else -> Icons.Default.AssignmentTurnedIn
                         }
                         Icon(imageVector = iconVector, contentDescription = title)
                     },
@@ -100,6 +103,13 @@ fun RegistryScreen(
                     notices = notices,
                     onSaveNotice = onSaveNotice,
                     onDeleteNotice = onDeleteNotice,
+                    modifier = Modifier.fillMaxSize()
+                )
+                4 -> AttendanceScreen(
+                    students = students,
+                    classes = classes,
+                    attendanceRecords = attendance,
+                    onSaveAttendance = onSaveAttendance,
                     modifier = Modifier.fillMaxSize()
                 )
             }

@@ -17,12 +17,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.Student
+import com.example.ui.components.PdfReportGenerator
 import com.example.ui.components.PortalFooter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -339,8 +341,20 @@ fun StudentCardItem(
                             )
                         }
 
-                        // Actions Row: Edit and Delete
+                        // Actions Row: Edit, Delete, and PDF printing
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            val cardContext = LocalContext.current
+                            IconButton(
+                                onClick = {
+                                    PdfReportGenerator.printStudentReportPdf(cardContext, student)
+                                },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiary.copy(alpha = 0.08f),
+                                    contentColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            ) {
+                                Icon(Icons.Default.PictureAsPdf, contentDescription = "Print PDF Report Card", modifier = Modifier.size(18.dp))
+                            }
                             IconButton(
                                 onClick = onEdit,
                                 colors = IconButtonDefaults.iconButtonColors(

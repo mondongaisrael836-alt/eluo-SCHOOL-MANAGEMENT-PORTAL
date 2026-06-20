@@ -45,3 +45,12 @@ data class Notice(
     val date: String,
     val priority: String = "Normal"
 )
+
+@Entity(tableName = "attendance_records")
+data class AttendanceRecord(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val date: String,
+    val className: String,
+    val studentName: String,
+    val isPresent: Boolean
+)
