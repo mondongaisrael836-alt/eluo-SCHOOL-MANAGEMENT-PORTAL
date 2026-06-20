@@ -43,12 +43,18 @@ fun MainPortalApp(
     val classes by viewModel.classes.collectAsStateWithLifecycle()
     val notices by viewModel.notices.collectAsStateWithLifecycle()
 
+    val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
+    val payeePhone by viewModel.payeePhone.collectAsStateWithLifecycle()
+    val cart by viewModel.cart.collectAsStateWithLifecycle()
+    val transactions by viewModel.transactions.collectAsStateWithLifecycle()
+    val chatMessages by viewModel.chatMessages.collectAsStateWithLifecycle()
+
     val tabs = listOf(
         TabItem("Home", Icons.Default.Home, "Overview Dashboard"),
-        TabItem("Students", Icons.Default.Person, "Management"),
-        TabItem("Teachers", Icons.Default.Face, "Faculty Members"),
-        TabItem("Classes", Icons.Default.Book, "Course Sessions"),
-        TabItem("Bulletin", Icons.Default.Notifications, "School Notices")
+        TabItem("Registry", Icons.Default.Assignment, "Academic Hub"),
+        TabItem("Messaging", Icons.Default.QuestionAnswer, "Faculty Chat"),
+        TabItem("Store", Icons.Default.LocalMall, "Online Campus Shop"),
+        TabItem("Wallet", Icons.Default.AccountBalanceWallet, "School Escrow Setup")
     )
 
     Scaffold(
@@ -112,28 +118,43 @@ fun MainPortalApp(
                     onNavigateToTab = { selectedTab = it },
                     modifier = Modifier.fillMaxSize()
                 )
-                1 -> StudentsScreen(
+                1 -> RegistryScreen(
                     students = students,
                     onSaveStudent = { viewModel.saveStudent(it) },
                     onDeleteStudent = { viewModel.deleteStudent(it) },
-                    modifier = Modifier.fillMaxSize()
-                )
-                2 -> TeachersScreen(
                     teachers = teachers,
                     onSaveTeacher = { viewModel.saveTeacher(it) },
                     onDeleteTeacher = { viewModel.deleteTeacher(it) },
-                    modifier = Modifier.fillMaxSize()
-                )
-                3 -> ClassesScreen(
                     classes = classes,
                     onSaveClass = { viewModel.saveClass(it) },
                     onDeleteClass = { viewModel.deleteClass(it) },
-                    modifier = Modifier.fillMaxSize()
-                )
-                4 -> NoticesScreen(
                     notices = notices,
                     onSaveNotice = { viewModel.saveNotice(it) },
                     onDeleteNotice = { viewModel.deleteNotice(it) },
+                    initialTab = 0,
+                    modifier = Modifier.fillMaxSize()
+                )
+                2 -> MessagingScreen(
+                    userProfile = userProfile,
+                    chatMessages = chatMessages,
+                    onSignIn = { name, email, role, phone -> viewModel.signIn(name, email, role, phone) },
+                    onSignOut = { viewModel.signOut() },
+                    onUpdateProfile = { name, email, phone, bio -> viewModel.updateProfile(name, email, phone, bio) },
+                    onSendMessage = { text -> viewModel.sendMessage(text) },
+                    modifier = Modifier.fillMaxSize()
+                )
+                3 -> StoreScreen(
+                    products = viewModel.products,
+                    cart = cart,
+                    onAddToCart = { viewModel.addToCart(it) },
+                    onRemoveFromCart = { viewModel.removeFromCart(it) },
+                    onCheckout = { name, phone -> viewModel.checkoutCart(name, phone) },
+                    modifier = Modifier.fillMaxSize()
+                )
+                4 -> WalletScreen(
+                    payeePhone = payeePhone,
+                    transactions = transactions,
+                    onRegisterPayeePhone = { viewModel.registerPayeePhone(it) },
                     modifier = Modifier.fillMaxSize()
                 )
             }

@@ -128,4 +128,190 @@ class SchoolViewModel(application: Application) : AndroidViewModel(application) 
             repository.deleteNoticeById(notice.id)
         }
     }
+
+    // --- PORTAL DATA STRUCTURES & EXTENSIVE IN-MEMORY SESSION STATES ---
+
+    // User Session Profile State
+    private val _userProfile = kotlinx.coroutines.flow.MutableStateFlow(UserProfile())
+    val userProfile: StateFlow<UserProfile> = _userProfile
+
+    // School Payee Mobile Money Registration Phone
+    private val _payeePhone = kotlinx.coroutines.flow.MutableStateFlow("+243 897 5555")
+    val payeePhone: StateFlow<String> = _payeePhone
+
+    // Store cart state: Product ID -> Quantity
+    private val _cart = kotlinx.coroutines.flow.MutableStateFlow<Map<Int, Int>>(emptyMap())
+    val cart: StateFlow<Map<Int, Int>> = _cart
+
+    // Transaction Ledger (School incoming cash flow from store)
+    private val _transactions = kotlinx.coroutines.flow.MutableStateFlow<List<StoreTransaction>>(listOf(
+        StoreTransaction("TX-9281-AM", "Israel Mondonga", "+243 897 1234", "Advanced Algorithms (x1)", 62.0, "10 mins ago", "+243 897 5555"),
+        StoreTransaction("TX-9220-SC", "Sophia Carter", "+1 555 1023", "RFID Badge & Uniform (x1)", 57.0, "2 hours ago", "+243 897 5555")
+    ))
+    val transactions: StateFlow<List<StoreTransaction>> = _transactions
+
+    // Portal direct messaging logs
+    private val _chatMessages = kotlinx.coroutines.flow.MutableStateFlow<List<MessageLog>>(listOf(
+        MessageLog(1, "Prof. Eluo Mondonga Sr.", "Hello Israel, did you complete your Advanced Algorithms term project?", "09:42 AM", false),
+        MessageLog(2, "Me", "Yes Professor! I implemented the balanced AVL Red-Black Trees with screenshot logs.", "09:44 AM", true),
+        MessageLog(3, "Prof. Eluo Mondonga Sr.", "Outstanding. Bring the source log printouts to Lab 304 tomorrow.", "09:45 AM", false)
+    ))
+    val chatMessages: StateFlow<List<MessageLog>> = _chatMessages
+
+    // Available Products Catalog
+    val products = listOf(
+        StoreProduct(1, "ELsystem Winter Blazer Uniform", "Official academic dark blue tailored blazer with golden heraldic standard crest.", 45.0, "Uniforms"),
+        StoreProduct(2, "Advanced Algorithms (EL Edition)", "Second semester textbook by Prof. Eluo Mondonga Sr. with complete code challenges.", 62.0, "Textbooks"),
+        StoreProduct(3, "Quantum Physics Student Manual", "Syllabus and safety handbook for labs by Dr. Elena Rostova.", 38.0, "Textbooks"),
+        StoreProduct(4, "High Performance Student STEM Laptop", "Intel Core i5, 16GB RAM, 512GB SSD, durable school rugged chassis.", 399.0, "Technology"),
+        StoreProduct(5, "ELsystem Smart Card ID Badge (RFID)", "Smart access pass for classrooms, library gates and digital payments.", 12.0, "Equipment"),
+        StoreProduct(6, "Elite Level STEM Microcontroller Kit", "Includes breadboards, sensors, servos, and step-by-step experiment modules.", 65.0, "Equipment")
+    )
+
+    // Handlers
+    fun signIn(name: String, email: String, role: String, phone: String) {
+        _userProfile.value = UserProfile(
+            name = name,
+            email = email,
+            role = role,
+            phone = phone,
+            bio = "Active $role of ELsystem Royal Academy.",
+            isLoggedIn = true
+        )
+    }
+
+    fun updateProfile(name: String, email: String, phone: String, bio: String) {
+        _userProfile.value = _userProfile.value.copy(
+            name = name,
+            email = email,
+            phone = phone,
+            bio = bio
+        )
+    }
+
+    fun signOut() {
+        _userProfile.value = UserProfile()
+        _cart.value = emptyMap()
+    }
+
+    fun registerPayeePhone(phone: String) {
+        _payeePhone.value = phone
+    }
+
+    fun addToCart(productId: Int) {
+        val current = _cart.value.toMutableMap()
+        current[productId] = (current[productId] ?: 0) + 1
+        _cart.value = current
+    }
+
+    fun removeFromCart(productId: Int) {
+        val current = _cart.value.toMutableMap()
+        val count = current[productId] ?: 0
+        if (count <= 1) {
+            current.remove(productId)
+        } else {
+            current[productId] = count - 1
+        }
+        _cart.value = current
+    }
+
+    fun clearCart() {
+        _cart.value = emptyMap()
+    }
+
+    fun checkoutCart(buyerName: String, buyerPhone: String) {
+        val currentCart = _cart.value
+        if (currentCart.isEmpty()) return
+
+        var sum = 0.0
+        val itemsList = mutableListOf<String>()
+        currentCart.forEach { (pid, qty) ->
+            val p = products.find { it.id == pid }
+            if (p != null) {
+                sum += p.price * qty
+                itemsList.add("${p.title.split(" ").take(2).joinToString(" ")} (x$qty)")
+            }
+        }
+
+        val summaryStr = itemsList.joinToString(", ")
+        val txId = "TX-${(1000..9999).random()}-${buyerName.split(" ").firstOrNull()?.uppercase() ?: "PAY"}"
+        
+        val newTx = StoreTransaction(
+            id = txId,
+            buyerName = buyerName,
+            buyerPhone = buyerPhone,
+            itemsSummary = summaryStr,
+            amountPaid = sum,
+            timestamp = "Just Now",
+            payeePhone = _payeePhone.value
+        )
+
+        _transactions.value = listOf(newTx) + _transactions.value
+        _cart.value = emptyMap()
+    }
+
+    fun sendMessage(text: String, contactName: String = "Prof. Eluo Mondonga Sr.") {
+        if (text.isBlank()) return
+        
+        // Add user's dispatch
+        val current = _chatMessages.value.toMutableList()
+        val nextId = current.size + 1
+        current.add(MessageLog(nextId, "Me", text, "Just Now", true))
+        _chatMessages.value = current
+
+        // Auto Faculty AI / Scripted response simulation
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(1000)
+            val updated = _chatMessages.value.toMutableList()
+            val responseId = updated.size + 1
+            val replyText = when {
+                text.lowercase().contains("fees") || text.lowercase().contains("pay") -> 
+                    "Thank you for contacting administrative support regarding digital store payments. All mobile payments register instantly under the Wallet Ledger."
+                text.lowercase().contains("homework") || text.lowercase().contains("project") || text.lowercase().contains("grade") ->
+                    "Excellent query. Grades are being compiled for the upcoming performance review. Please verify that your files are uploaded."
+                text.lowercase().contains("uniform") || text.lowercase().contains("book") || text.lowercase().contains("buy") ->
+                    "Supplies ordered through the Campus Store will be available for pickup at the Main Hall Bookstore once payment clears."
+                else -> "Your dispatch has been received. Let's arrange a time to review this. Please keep up the good work!"
+            }
+            updated.add(MessageLog(responseId, contactName, replyText, "Just Now", false))
+            _chatMessages.value = updated
+        }
+    }
 }
+
+data class UserProfile(
+    val name: String = "",
+    val email: String = "",
+    val phone: String = "",
+    val role: String = "Student",
+    val bio: String = "",
+    val isLoggedIn: Boolean = false
+)
+
+data class StoreProduct(
+    val id: Int,
+    val title: String,
+    val description: String,
+    val price: Double,
+    val category: String,
+    val availableStock: Int = 100
+)
+
+data class StoreTransaction(
+    val id: String,
+    val buyerName: String,
+    val buyerPhone: String,
+    val itemsSummary: String,
+    val amountPaid: Double,
+    val timestamp: String,
+    val payeePhone: String
+)
+
+data class MessageLog(
+    val id: Int,
+    val senderName: String,
+    val text: String,
+    val time: String,
+    val isFromMe: Boolean
+)
+
